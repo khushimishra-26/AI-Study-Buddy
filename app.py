@@ -16,7 +16,8 @@ if not api_key:
 # -------------------------
 # Initialize OpenAI client
 # -------------------------
-client = OpenAI()
+api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=api_key)
 
 # -------------------------
 # Streamlit page setup
