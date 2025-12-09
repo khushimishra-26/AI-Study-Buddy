@@ -68,7 +68,7 @@ if st.button("🚀 Generate"):
                 # -------------------------
                 response = client.responses.create(
                     model="gpt-4.1-mini",
-                    messages=[
+                    input=[
                         {"role": "system", "content": "You are an AI study assistant helping students learn efficiently."},
                         {"role": "user", "content": prompt}
                     ],
