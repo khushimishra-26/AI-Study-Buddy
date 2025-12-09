@@ -7,16 +7,17 @@ import os
 # Load environment variables
 # -------------------------
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
+
+# Try to get the key from Streamlit secrets first, then from .env
+api_key = st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
 
 if not api_key:
-    st.error("⚠️ OPENAI_API_KEY not found in your environment. Please set it in your .env file.")
+    st.error("⚠️ OPENAI_API_KEY not found. Please set it in your .env or Streamlit secrets.")
     st.stop()
 
 # -------------------------
 # Initialize OpenAI client
 # -------------------------
-api_key = st.secrets["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
 
 # -------------------------
@@ -48,51 +49,48 @@ if st.button("🚀 Generate"):
     else:
         with st.spinner("AI is thinking... 💡"):
             try:
+
                 # -------------------------
                 # Prepare prompt
                 # -------------------------
                 if option == "Explain Topic":
-                    prompt = f"Explain the following topic in simple terms suitable for a student:\n\n{user_input}\n\nExplanation:"
+                    prompt = f"Explain the following topic in simple words for a student:\n\n{user_input}"
                 elif option == "Summarize Notes":
-                    prompt = f"Summarize the following notes clearly and concisely:\n\n{user_input}\n\nSummary:"
-                else:  # Generate Quiz
-                    prompt = f"Generate 5 multiple-choice quiz questions (with answers) from the following content:\n\n{user_input}\n\nQuiz:"
+                    prompt = f"Summarize these notes clearly and concisely:\n\n{user_input}"
+                else:
+                    prompt = (
+                        "Generate 5 multiple-choice quiz questions with answers based on the following content:\n\n"
+                        f"{user_input}"
+                    )
 
                 # -------------------------
-                # Call OpenAI API
+                # Call OpenAI API (NEW METHOD)
                 # -------------------------
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
+                response = client.responses.create(
+                    model="gpt-4.1-mini",
                     messages=[
-                        {"role": "system", "content": "You are an AI study assistant that helps students learn efficiently."},
+                        {"role": "system", "content": "You are an AI study assistant helping students learn efficiently."},
                         {"role": "user", "content": prompt}
                     ],
+                    max_output_tokens=600,
                     temperature=0.7,
-                    max_tokens=600
                 )
 
-                output = response.choices[0].message.content.strip()
+                output = response.output_text
 
-                # -------------------------
-                # Display output
-                # -------------------------
                 st.success("✅ Done!")
                 st.markdown("### 📘 Output:")
                 st.markdown(output)
 
             except Exception as e:
-                # Catch all exceptions, including quota errors
                 if "insufficient_quota" in str(e) or "429" in str(e):
                     st.error(
                         "⚠️ Your OpenAI API quota has been exceeded. "
-                        "Please check your usage or upgrade your plan to continue using the AI Study Buddy."
+                        "Please check your usage or upgrade your plan."
                     )
                 else:
                     st.error(f"⚠️ Something went wrong: {e}")
 
-# -------------------------
-# Footer
-# -------------------------
 st.markdown("---")
 st.markdown("Built on macOS using Streamlit and OpenAI")
 
